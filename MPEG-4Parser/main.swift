@@ -9,17 +9,17 @@
 import Foundation
 import VideoToolbox
 
-func dataWithHexString(hex: String) -> Data {
-    var hex = hex
+func convertHexStringToData(string: String) -> Data {
+    var hexString = string
     var data = Data()
-    while(hex.count > 0) {
-        let subIndex = hex.index(hex.startIndex, offsetBy: 2)
-        let c = String(hex[..<subIndex])
-        hex = String(hex[subIndex...])
-        var ch: UInt32 = 0
-        Scanner(string: c).scanHexInt32(&ch)
-        var char = UInt8(ch)
-        data.append(&char, count: 1)
+    while hexString.count > 0 {
+        let subIndex = hexString.index(hexString.startIndex, offsetBy: 2)
+        let slicedString = String(hexString[..<subIndex])
+        hexString = String(hexString[subIndex...])
+        var tempStorageForUInt8: UInt32 = 0
+        Scanner(string: slicedString).scanHexInt32(&tempStorageForUInt8)
+        var convertedNumber = UInt8(tempStorageForUInt8)
+        data.append(&convertedNumber, count: 1)
     }
     return data
 }
@@ -98,7 +98,7 @@ var infoSize = hexNumbers.toDecimalValue
 
 while true {
     readStream(stream: stream, amount: (infoSize - headerSize))
-    let header = String(data: dataWithHexString(hex: Array(streamBuffer[0..<4]).tohexNumbers.mergeToString), encoding: .utf8)
+    let header = String(data: convertHexStringToData(string: Array(streamBuffer[0..<4]).tohexNumbers.mergeToString), encoding: .utf8)
     streamBuffer.flush()
     print("-   -   -   -   -   -   -   -")
     print("\(header!), number of data \(infoSize)")
