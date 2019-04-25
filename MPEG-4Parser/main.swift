@@ -68,7 +68,7 @@ var streamBuffer: [UInt8] = []
 
 @discardableResult
 func readStream(stream: InputStream?, amount: Int) -> Int {
-    guard let stream = stream, stream.hasBytesAvailable else {
+    guard let stream = stream, stream.hasBytesAvailable, amount > 0 else {
         return 0
     }
     
@@ -91,23 +91,9 @@ let dataPath = documentsDirectory.appendingPathComponent("firewerk.mp4")
 let stream = InputStream(url: dataPath)
 stream?.open()
 
-let headerSize = readStream(stream: stream, amount: 4)
-let hexNumbers = streamBuffer.tohexNumbers
-streamBuffer.flush()
-var infoSize = hexNumbers.toDecimalValue
 
-while true {
-    readStream(stream: stream, amount: (infoSize - headerSize))
-    let header = String(data: convertHexStringToData(string: Array(streamBuffer[0..<4]).tohexNumbers.mergeToString), encoding: .utf8)
-    streamBuffer.flush()
-    print("-   -   -   -   -   -   -   -")
-    print("\(header!), number of data \(infoSize)")
-    readStream(stream: stream, amount: 4)
-    
-    if streamBuffer.isEmpty {
-        break
+
+let mp4 = MPEG4File(file: stream!)
+mp4.root.children?.forEach {
+    print($0)
     }
-    
-    infoSize = Array(streamBuffer[0..<4]).tohexNumbers.toDecimalValue
-    streamBuffer.flush()
-}
