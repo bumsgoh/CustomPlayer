@@ -42,11 +42,14 @@ print(stream?.hasBytesAvailable)
 
 let reader = FileReader(url: dataPath)
 let mediaReader = MediaFileReader(fileReader: reader!, type: .mp4)
-let root: HalfContainer = RootType()
+let root: RootType = RootType()
+root.size = 1000000000
 mediaReader.decodeFile(type: .mp4, root: root)
 /*
 
 
 */
-print(root.children)
+//print(root.moov.children)
+root.parse()
+print(root.moov.children)
 

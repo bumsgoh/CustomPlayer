@@ -155,7 +155,7 @@ enum ContainerType: String, CaseIterable {
 extension ContainerType {
     var isParent: Bool {
         if self == .moov || self == .trak || self == .mdia || self == .minf
-            || self == .dinf || self == .stbl || self == .udta || self == .mdat {
+            || self == .dinf || self == .stbl || self == .edts {
             return true
         } else {
             return false
@@ -175,6 +175,8 @@ extension ContainerType {
 }
 
 class RootType: HalfContainer {
+    var offset: UInt64 = 0
+    
     
     var type: ContainerType = .root
     var size: Int = 0
@@ -186,31 +188,28 @@ class RootType: HalfContainer {
     var udta: Udta = Udta()
     var mdat: Mdat = Mdat()
     
-    var children: [Container]? = []
-    
+    var children: [Container] = []
+
     func parse() {
-        children?.forEach {
+        children.forEach {
             switch $0.type {
             case .ftyp:
-                let ftyp = Ftyp()
-                ftyp.parse()
-                self.ftyp = ftyp
+                $0.parse()
+                self.ftyp = $0 as! Ftyp
             case .free:
-                let free = Free()
-                free.parse()
-                self.free = free
+                $0.parse()
+                self.free = $0 as! Free
             case .moov:
-                let moov = Moov()
-                moov.parse()
-                self.moov = moov
+                let child = $0 as! Moov
+                child.parse()
+                self.moov = child
             case .udta:
-                let udta = Udta()
-                udta.parse()
-                self.udta = udta
+                let child = $0 as! Udta
+                child.parse()
+                self.udta = child
             case .mdat:
-                let mdat = Mdat()
-                mdat.parse()
-                self.mdat = mdat
+                $0.parse()
+                self.mdat = $0 as! Mdat
             default:
                 assertionFailure("failed to make root")
             }
@@ -272,6 +271,9 @@ class Mdat: Container {
     }*/
 }
 class Moov: HalfContainer {
+    var offset: UInt64 = 0
+    
+    
    
     var type: ContainerType = .moov
     var size: Int = 0
@@ -281,23 +283,20 @@ class Moov: HalfContainer {
     var iods: Iods = Iods()
     var traks: [Trak] = []
     
-    var children: [Container]? = []
+    var children: [Container] = []
     
     func parse() {
-        children?.forEach {
+        children.forEach {
             switch $0.type {
             case .mvhd:
-                let mvhd = Mvhd()
-                mvhd.parse()
-                self.mvhd = mvhd
+                $0.parse()
+                self.mvhd = $0 as! Mvhd
             case .iods:
-                let iods = Iods()
-                iods.parse()
-                self.iods = iods
+                $0.parse()
+                self.iods = $0 as! Iods
             case .trak:
-                let trak = Trak()
-                trak.parse()
-                self.traks.append(trak)
+                $0.parse()
+                self.traks.append($0 as! Trak)
             default:
                 assertionFailure("failed to make moov")
             }
@@ -306,8 +305,6 @@ class Moov: HalfContainer {
         self.mvhd = mvhd
         self.iods = iods
     }*/
-    
-    
     }
 }
 
@@ -331,7 +328,7 @@ class Mvhd: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
     /*init(version: Int,
          flag: Int,
@@ -365,7 +362,7 @@ class Iods: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
     /*init(data: Data) {
         self.data = data
@@ -373,6 +370,8 @@ class Iods: Container {
 }
 
 class Trak: HalfContainer {
+    var offset: UInt64 = 0
+    
     
     var type: ContainerType = .trak
     var size: Int = 0
@@ -384,25 +383,22 @@ class Trak: HalfContainer {
     var chunks: [Chunk] = []
     var samples: [Sample] = []
     
-    var children: [Container]? = []
+    var children: [Container] = []
     
     init() {}
     
     func parse() {
-        children?.forEach {
+        children.forEach {
             switch $0.type {
             case .tkhd:
-                let tkhd = Tkhd()
-                tkhd.parse()
-                self.tkhd = tkhd
+                $0.parse()
+                self.tkhd = $0 as! Tkhd
             case .mdia:
-                let mdia = Mdia()
-                mdia.parse()
-                self.mdia = mdia
+                $0.parse()
+                self.mdia = $0 as! Mdia
             case .edts:
-                let edts = Edts()
-                edts.parse()
-                self.edts = edts
+                $0.parse()
+                self.edts = $0 as! Edts
             default:
                 assertionFailure("failed to make trak")
             }
@@ -440,7 +436,7 @@ class Tkhd: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
    /* init(version: Int,
          flag: Int,
@@ -470,6 +466,8 @@ class Tkhd: Container {
     }*/
 }
 class Edts: HalfContainer {
+    var offset: UInt64 = 0
+    
     
     var type: ContainerType = .edts
     var size: Int = 0
@@ -479,13 +477,12 @@ class Edts: HalfContainer {
     
     init() {}
     
-    var children: [Container]? = []
+    var children: [Container] = []
     func parse() {
-        children?.forEach {
+        children.forEach {
             if $0.type == .elst {
-                let elst = Elst()
-                elst.parse()
-                self.elst = elst
+                $0.parse()
+                self.elst = $0 as! Elst
             }
         }
     }
@@ -511,11 +508,13 @@ class Elst: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
 }
 
 class Mdia: HalfContainer {
+    var offset: UInt64 = 0
+    
     
     var type: ContainerType = .mdia
     var size: Int = 0
@@ -525,26 +524,23 @@ class Mdia: HalfContainer {
     var hdlr: Hdlr = Hdlr()
     var minf: Minf = Minf()
     
-    var children: [Container]? = []
+    var children: [Container] = []
     
     init() {}
     
     
     func parse() {
-        children?.forEach {
+        children.forEach {
             switch $0.type {
             case .mdhd:
-                let mdhd = Mdhd()
-                mdhd.parse()
-                self.mdhd = mdhd
+                $0.parse()
+                self.mdhd = $0 as! Mdhd
             case .hdlr:
-                let hdlr = Hdlr()
-                hdlr.parse()
-                self.hdlr = hdlr
+                $0.parse()
+                self.hdlr = $0 as! Hdlr
             case .minf:
-                let minf = Minf()
-                minf.parse()
-                self.minf = minf
+                $0.parse()
+                self.minf = $0 as! Minf
             default:
                 assertionFailure("failed to make mdia")
             }
@@ -573,7 +569,7 @@ class Mdhd: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
     
     /*init(version: Int,
@@ -609,7 +605,7 @@ class Hdlr: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
     /*init(version: Int,
          flags: Int,
@@ -626,6 +622,8 @@ class Hdlr: Container {
 }
     
 class Minf: HalfContainer {
+    var offset: UInt64 = 0
+    
     
     var type: ContainerType = .minf
     var size: Int = 0
@@ -637,34 +635,29 @@ class Minf: HalfContainer {
     var dinf: Dinf = Dinf()
     var hdlr: Hdlr = Hdlr()
     
-    var children: [Container]? = []
+    var children: [Container] = []
     
     init() {}
     
     
     func parse() {
-        children?.forEach {
+        children.forEach {
             switch $0.type {
             case .vmhd:
-                let vmhd = Vmhd()
-                vmhd.parse()
-                self.vmhd = vmhd
+                $0.parse()
+                self.vmhd = $0 as! Vmhd
             case .smhd:
-                let smhd = Smhd()
-                smhd.parse()
-                self.smhd = smhd
+                $0.parse()
+                self.smhd = $0 as! Smhd
             case .stbl:
-                let stbl = Stbl()
-                stbl.parse()
-                self.stbl = stbl
+                $0.parse()
+                self.stbl = $0 as! Stbl
             case .dinf:
-                let dinf = Dinf()
-                dinf.parse()
-                self.dinf = dinf
+                $0.parse()
+                self.dinf = $0 as! Dinf
             case .hdlr:
-                let hdlr = Hdlr()
-                hdlr.parse()
-                self.hdlr = hdlr
+                $0.parse()
+                self.hdlr = $0 as! Hdlr
             default:
                 assertionFailure("failed to make mdia")
             }
@@ -726,6 +719,8 @@ class Smhd: Container {
 }
 
 class Dinf: HalfContainer {
+    var offset: UInt64 = 0
+    
     
     var type: ContainerType = .dinf
     var size: Int = 0
@@ -733,12 +728,17 @@ class Dinf: HalfContainer {
     
     var dref: Dref = Dref()
     
-    var children: [Container]? = []
+    var children: [Container] = []
     
     init() {}
     
     func parse() {
-        
+        children.forEach {
+            if $0.type == .dref {
+                $0.parse()
+                self.dref = $0 as! Dref
+            }
+        }
     }
     
    /* init(dref: Dref) {
@@ -760,7 +760,7 @@ class Dref: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
     /*init(version: Int, flags: Int, entryCount: Int) {
         self.version = version
@@ -771,6 +771,8 @@ class Dref: Container {
 }
     
 class Stbl: HalfContainer {
+    var offset: UInt64 = 0
+    
     
     var type: ContainerType = .stbl
     var size: Int = 0
@@ -785,47 +787,40 @@ class Stbl: HalfContainer {
     var co64: Co64 = Co64() // mandatory 이지만 없는경우있는듯
     var ctts: Ctts = Ctts()
     
-    var children: [Container]? = []
+    var children: [Container] = []
     
     init() {}
     
     
     func parse() {
-        children?.forEach {
+        children.forEach {
             switch $0.type {
             case .stsd:
-                let stsd = Stsd()
-                stsd.parse()
-                self.stsd = stsd
+                $0.parse()
+                self.stsd = $0 as! Stsd
             case .stts:
-                let stts = Stts()
-                stts.parse()
-                self.stts = stts
+                $0.parse()
+                self.stts = $0 as! Stts
             case .stss:
-                let stss = Stss()
-                stss.parse()
-                self.stss = stss
+                $0.parse()
+                self.stss = $0 as! Stss
             case .stsc:
-                let stsc = Stsc()
-                stsc.parse()
-                self.stsc = stsc
+                $0.parse()
+                self.stsc = $0 as! Stsc
             case .stsz:
-                let stsz = Stsz()
-                stsz.parse()
-                self.stsz = stsz
+                $0.parse()
+                self.stsz = $0 as! Stsz
             case .stco:
-                let stco = Stco()
-                stco.parse()
-                self.stco = stco
+                $0.parse()
+                self.stco = $0 as! Stco
             case .co64:
-                let co64 = Co64()
-                co64.parse()
-                self.co64 = co64
+                $0.parse()
+                self.co64 = $0 as! Co64
             case .ctts:
-                let ctts = Ctts()
-                ctts.parse()
-                self.ctts = ctts
+                $0.parse()
+                self.ctts = $0 as! Ctts
             default:
+                print("is!!\($0.type)")
                 assertionFailure("failed to make stbl")
             }
         }
@@ -848,7 +843,7 @@ class Co64: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
 }
 
@@ -866,7 +861,9 @@ class Ctts: Container {
     
     init() {}
     
-    func parse(){}
+    func parse(){
+        print(type)
+    }
     
     /*init(version: Int,
          flags: Int,
@@ -897,7 +894,7 @@ class Stsd: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
     
    /* init(version: Int,
@@ -927,7 +924,7 @@ class Stts: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
     
    /* init(version: Int,
@@ -958,7 +955,7 @@ class Stss: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
     
     /*init(version: Int,
@@ -989,7 +986,7 @@ class Stsc: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
     
    /* init(version: Int,
@@ -1023,7 +1020,7 @@ class Stsz: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
     /*init(version: Int,
          flags: Int,
@@ -1053,7 +1050,7 @@ class Stco: Container {
     init() {}
     
     func parse() {
-        
+        print(type)
     }
     /*init(version: Int,
          flags: Int,
@@ -1067,26 +1064,28 @@ class Stco: Container {
     }*/
 }
 
-class Udta: HalfContainer {
+class Udta: Container {
+    var offset: UInt64 = 0
+    
     
     var type: ContainerType = .udta
     var size: Int = 0
     var data: Data = Data()
     
-    var meta: Meta = Meta()
+   // var meta: Meta = Meta()
     
-    var children: [Container]? = []
+    var children: [Container] = []
     
     init() {}
     
     func parse() {
-        children?.forEach {
+        /*children.forEach {
             if $0.type == .meta {
-                    let meta = Meta()
-                    meta.parse()
-                    self.meta = meta
+                    $0.parse()
+                    self.meta = $0 as! Meta
             }
-        }
+        }*/
+        print(type)
     }
     
     /*init(meta: Meta) {
@@ -1095,7 +1094,9 @@ class Udta: HalfContainer {
 }
 
 
-class Meta: HalfContainer {
+class Meta: Container {
+    var offset: UInt64 = 0
+    
     
     var type: ContainerType = .meta
     var size: Int = 0
@@ -1103,13 +1104,20 @@ class Meta: HalfContainer {
     
     var version: Int = 0
     var flag: Int = 0
-    var handler: Hdlr = Hdlr()
+    //var handler: Hdlr = Hdlr()
     
-    var children: [Container]? = []
+    //var children: [Container] = []
+    
     init() {}
     
     func parse() {
-        
+        print(type)
+        /*children.forEach {
+            if $0.type == .hdlr {
+                $0.parse()
+                self.handler = $0 as! Hdlr
+            }
+        }*/
     }
     /*init(version: Int, flag: Int, handler: Hdlr) {
         self.version = version

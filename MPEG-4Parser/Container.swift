@@ -20,9 +20,12 @@ protocol HalfContainer: Container {
     var type: ContainerType { get set }
     var size: Int { get set }
     var data: Data { get set }
-    var children: [Container]? { get set }
+    var offset: UInt64 { get set }
+    var children: [Container] { get set }
     
-    func parse()
+  //  func connect()
+    
+    
 }
 
 
