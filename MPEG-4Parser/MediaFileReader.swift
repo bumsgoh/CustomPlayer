@@ -48,32 +48,24 @@ class MediaFileReader {
         var containers: [HalfContainer] = []
         
         containers = decode(root: root)
-        print("root is\(root) and children\(root.children)")
         
         while let item = containers.first {
             containers.remove(at: 0)
-            print("root \(item)")
-            let data = decode(root: item)
-            print("Added\(data)")
-            print("children \(containers)")
-            containers.append(contentsOf: data)
-           // decodeFile(type: type, root: root)
+            let parentContainers = decode(root: item)
+            containers.append(contentsOf: parentContainers)
         }
-        
-        
     }
     
-    func decode(root: HalfContainer) -> [HalfContainer] {
+    private func decode(root: HalfContainer) -> [HalfContainer] {
         var containers: [HalfContainer] = []
         var currentRootContainer: HalfContainer = root
         var currentOffset = currentRootContainer.offset
         fileReader.seek(offset: currentOffset)
-        label: while fileReader.hasAvailableData() {
+        while fileReader.hasAvailableData() {
             readHeader() { [weak self] (headerData) in
                 guard let self = self else { return }
                 let size = headerData.0
                 let headerName = headerData.1
-                //print("header => \(headerName)")
                 currentOffset = self.fileReader.currentOffset()
                 
                 self.fileReader.read(length: size - self.headerSize) { (data) in
@@ -82,32 +74,27 @@ class MediaFileReader {
                         let typeOfContainer = try self.containerPool.pullOutContainer(with: headerName)
                         var box = self.containerPool.pullOutFileTypeContainer(with: typeOfContainer)
                         box.size = size
-                        //currentRootContainer.offset = currentOffset
+                            
                         if box.isParent {
                             guard var castedBox = box as? HalfContainer else { return }
                             castedBox.offset = currentOffset
-                            print("box is \(castedBox.type) offset \(castedBox.offset)")
                             containers.append(castedBox)
-                            //self.fileReader.seek(offset: currentOffset)
-                            //self.decode(root: box as! HalfContainer)
                         } else {
                             box.data = data[0..<(size - self.headerSize)]
                         }
-                        print("cur root is \(currentRootContainer) and \(box.type) is added")
                         currentRootContainer.children.append(box)
                         }
+                        
                     } catch {
                         assertionFailure("initialization box failed")
                         return
                     }
                 }
             }
-           // print(currentRootContainer.offset)
-           if Int(currentRootContainer.offset) + currentRootContainer.size < Int(currentOffset) { break label }
+           if Int(currentRootContainer.offset) + currentRootContainer.size < Int(currentOffset) { break }
         }
         return containers
     }
-    
 }
 enum FileContainerType {
     case mp4

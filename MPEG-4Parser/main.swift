@@ -45,11 +45,6 @@ let mediaReader = MediaFileReader(fileReader: reader!, type: .mp4)
 let root: RootType = RootType()
 root.size = 1000000000
 mediaReader.decodeFile(type: .mp4, root: root)
-/*
-
-
-*/
-//print(root.moov.children)
 root.parse()
-print(root.moov.children)
+print(root.ftyp.majorBrand)
 
