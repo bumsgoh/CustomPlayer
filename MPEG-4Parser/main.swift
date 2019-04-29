@@ -8,6 +8,7 @@
 
 import Foundation
 import VideoToolbox
+import AVFoundation
 
 
 
@@ -33,18 +34,21 @@ func readStream(stream: InputStream?, amount: Int) -> Int {
 
 let fileManager = FileManager()
 let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-let dataPath = documentsDirectory.appendingPathComponent("test.mp4")
+let dataPath = documentsDirectory.appendingPathComponent("firewerk.mp4")
 
 
 let stream = InputStream(url: dataPath)
 stream?.open()
 print(stream?.hasBytesAvailable)
 
+let asset = AVAsset(url: dataPath)
 let reader = FileReader(url: dataPath)
 let mediaReader = MediaFileReader(fileReader: reader!, type: .mp4)
 let root: RootType = RootType()
 root.size = 1000000000
 mediaReader.decodeFile(type: .mp4, root: root)
-root.parse()
-print(root.ftyp.majorBrand)
+
+print(root.moov.mvhd.nextTrackId)
+print("is..\(root.moov.traks[1].mdia.minf.stbl.stco.chunkOffsets.count)")//traks[1].mdia.minf.stbl.stsz.entrySize.count)
+
 

@@ -54,12 +54,15 @@ class MediaFileReader {
             let parentContainers = decode(root: item)
             containers.append(contentsOf: parentContainers)
         }
+        
+        root.parse()
     }
     
     private func decode(root: HalfContainer) -> [HalfContainer] {
         var containers: [HalfContainer] = []
         var currentRootContainer: HalfContainer = root
         var currentOffset = currentRootContainer.offset
+        
         fileReader.seek(offset: currentOffset)
         while fileReader.hasAvailableData() {
             readHeader() { [weak self] (headerData) in
@@ -78,9 +81,10 @@ class MediaFileReader {
                         if box.isParent {
                             guard var castedBox = box as? HalfContainer else { return }
                             castedBox.offset = currentOffset
+                            castedBox.data = data
                             containers.append(castedBox)
                         } else {
-                            box.data = data[0..<(size - self.headerSize)]
+                            box.data = data
                         }
                         currentRootContainer.children.append(box)
                         }
