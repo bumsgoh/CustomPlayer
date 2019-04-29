@@ -33,14 +33,20 @@ func readStream(stream: InputStream?, amount: Int) -> Int {
 
 let fileManager = FileManager()
 let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-let dataPath = documentsDirectory.appendingPathComponent("firewerk.mp4")
+let dataPath = documentsDirectory.appendingPathComponent("test.mp4")
+
 
 let stream = InputStream(url: dataPath)
 stream?.open()
+print(stream?.hasBytesAvailable)
+
+let reader = FileReader(url: dataPath)
+let mediaReader = MediaFileReader(fileReader: reader!, type: .mp4)
+let root: HalfContainer = RootType()
+mediaReader.decodeFile(type: .mp4, root: root)
+/*
 
 
+*/
+print(root.children)
 
-let mp4 = MPEG4File(file: stream!)
-mp4.root.children?.forEach {
-    print($0)
-    }

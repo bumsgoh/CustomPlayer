@@ -48,7 +48,7 @@ struct MPEG4File {
                 } else {
                     container = SmallBox(type: typeOfContainer, size: infoSize)
                 }
-                container?.data = Array(dataFromBuffer[4...])
+                //container?.data = Array(dataFromBuffer[4...])
             } catch {
                 assertionFailure("initialization failed")
                 return

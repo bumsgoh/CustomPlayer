@@ -11,11 +11,19 @@ import Foundation
 protocol Container {
     var type: ContainerType { get set }
     var size: Int { get set }
-    var data: [UInt8] { get set }
+    var data: Data { get set }
     
     func parse()
 }
 
+protocol HalfContainer: Container {
+    var type: ContainerType { get set }
+    var size: Int { get set }
+    var data: Data { get set }
+    var children: [Container]? { get set }
+    
+    func parse()
+}
 
 
 

@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		C9A8A1FC2270A70600EB3FBC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A8A1FB2270A70600EB3FBC /* main.swift */; };
+		C9A8A20B22741CC000EB3FBC /* FileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A8A20A22741CC000EB3FBC /* FileReader.swift */; };
+		C9A8A20D22766E0900EB3FBC /* FileStreamReadable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A8A20C22766E0900EB3FBC /* FileStreamReadable.swift */; };
+		C9A8A20F22766E6400EB3FBC /* MediaFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A8A20E22766E6400EB3FBC /* MediaFileReader.swift */; };
 		CEF94BC222717B84006B7528 /* Container.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF94BC122717B84006B7528 /* Container.swift */; };
 		CEF94BC422718DAA006B7528 /* ContainerPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF94BC322718DAA006B7528 /* ContainerPool.swift */; };
 		CEF94BC6227289A2006B7528 /* Extenstions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF94BC5227289A2006B7528 /* Extenstions.swift */; };
@@ -30,6 +33,9 @@
 /* Begin PBXFileReference section */
 		C9A8A1F82270A70600EB3FBC /* MPEG-4Parser */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "MPEG-4Parser"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9A8A1FB2270A70600EB3FBC /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		C9A8A20A22741CC000EB3FBC /* FileReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileReader.swift; sourceTree = "<group>"; };
+		C9A8A20C22766E0900EB3FBC /* FileStreamReadable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileStreamReadable.swift; sourceTree = "<group>"; };
+		C9A8A20E22766E6400EB3FBC /* MediaFileReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaFileReader.swift; sourceTree = "<group>"; };
 		CEF94BC122717B84006B7528 /* Container.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Container.swift; sourceTree = "<group>"; };
 		CEF94BC322718DAA006B7528 /* ContainerPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerPool.swift; sourceTree = "<group>"; };
 		CEF94BC5227289A2006B7528 /* Extenstions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extenstions.swift; sourceTree = "<group>"; };
@@ -73,6 +79,9 @@
 				CEF94BC5227289A2006B7528 /* Extenstions.swift */,
 				CEF94BC722728A13006B7528 /* Models.swift */,
 				CEF94BC922728AA5006B7528 /* MP4File.swift */,
+				C9A8A20A22741CC000EB3FBC /* FileReader.swift */,
+				C9A8A20C22766E0900EB3FBC /* FileStreamReadable.swift */,
+				C9A8A20E22766E6400EB3FBC /* MediaFileReader.swift */,
 			);
 			path = "MPEG-4Parser";
 			sourceTree = "<group>";
@@ -134,12 +143,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C9A8A20B22741CC000EB3FBC /* FileReader.swift in Sources */,
 				CEF94BC6227289A2006B7528 /* Extenstions.swift in Sources */,
 				C9A8A1FC2270A70600EB3FBC /* main.swift in Sources */,
 				CEF94BC222717B84006B7528 /* Container.swift in Sources */,
 				CEF94BCA22728AA5006B7528 /* MP4File.swift in Sources */,
 				CEF94BC422718DAA006B7528 /* ContainerPool.swift in Sources */,
 				CEF94BC822728A13006B7528 /* Models.swift in Sources */,
+				C9A8A20F22766E6400EB3FBC /* MediaFileReader.swift in Sources */,
+				C9A8A20D22766E0900EB3FBC /* FileStreamReadable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

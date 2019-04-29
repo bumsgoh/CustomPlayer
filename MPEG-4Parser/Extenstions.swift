@@ -8,6 +8,39 @@
 
 import Foundation
 
+extension Data {
+    var convertToInt: Int {
+        var uIntArray: [UInt8] = []
+        self.forEach {
+            uIntArray.append($0)
+        }
+        return uIntArray.tohexNumbers.toDecimalValue
+    }
+    
+    func slice(in sizes: [Int]) -> [Data] {
+        
+        var offset = 0
+        var slicedData: [Data] = []
+        
+        for size in sizes {
+            if self.count > (offset + size) {
+                slicedData.append(self.subdata(in: offset..<(offset + size)))
+                offset += size
+            } else {
+                break
+            }
+        }
+        return slicedData
+    }
+    
+    var convertToString: String {
+        guard let convertedString = String(data: self, encoding: .utf8) else {
+            return ""
+        }
+        return convertedString
+    }
+}
+
 extension String {
     var convertHexStringToData: Data {
         var hexString = self
@@ -68,7 +101,7 @@ extension Array where Element == String {
 extension Container {
     var isParent: Bool {
         if type == .moov || type == .trak || type == .mdia || type == .minf
-            || type == .dinf || type == .stbl || type == .udta || type == .mdat {
+            || type == .dinf || type == .stbl || type == .udta {
             return true
         } else {
             return false
@@ -82,6 +115,20 @@ extension Container {
             
             return true
         } else {
+            return false
+        }
+    }
+}
+
+extension FileHandle {
+    func hasMoreData() -> Bool {
+        let position = offsetInFile
+        let length = seekToEndOfFile()
+        if position < length {
+            seek(toFileOffset: position)
+            return true
+        }
+        else {
             return false
         }
     }
