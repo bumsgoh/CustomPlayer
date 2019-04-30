@@ -9,116 +9,6 @@
 import Foundation
 
 
-
-class BigBox: Container {
-    
-    var type: ContainerType
-    var size: Int
-    var data: Data = Data()
-    var buffer: [UInt8] = []
-    var offset: Int = 0
-    var children: [Container]?
-    
-    @discardableResult
-    private func readDataStream(buffer: inout [UInt8], amount: Int) -> Int {
-        guard !data.isEmpty, amount > 0, offset < data.count else {
-            return 0
-        }
-        
-        let readData = Array(data[offset..<offset + amount])
-        let size = readData.count
-        buffer = readData
-        offset += amount
-        if size > 0 {
-            return size
-        }
-        return 0
-    }
-    
-    init(type: ContainerType, size: Int) {
-        self.type = type
-        self.size = size
-    }
-    
-    func parse() {
-        let containerPool = ContainerPool()
-        let headerSize = readDataStream(buffer: &buffer, amount: 4)
-        //readStream(stream: fileContents, amount: 4)
-        let hexNumbers = buffer.tohexNumbers
-        buffer.flush()
-        var infoSize = hexNumbers.toDecimalValue
-        
-        if headerSize > 0 {
-            self.children = []
-        }
-        
-        while true {
-            var container: Container?
-            readDataStream(buffer: &buffer, amount: infoSize - headerSize)
-            guard let containerType =
-                String(data: Array(buffer[0..<4])
-                .tohexNumbers
-                .mergeToString
-                .convertHexStringToData,
-                       encoding: .utf8) else {
-                                                return
-            }
-            let dataFromBuffer = Array(buffer[4...])
-            buffer.flush()
-            
-            do {
-                let typeOfContainer = try containerPool.pullOutContainer(with: containerType)
-                
-                if typeOfContainer.isParent {
-                    container = BigBox(type: typeOfContainer, size: infoSize)
-                    
-                } else {
-                    container = SmallBox(type: typeOfContainer, size: infoSize)
-                }
-               // container?.data = dataFromBuffer
-            } catch {
-                assertionFailure("initialization failed")
-                return
-            }
-            guard let productedContainer = container else {
-                assertionFailure("no container")
-                return
-            }
-            
-            children?.append(productedContainer)
-            readDataStream(buffer: &buffer, amount: 4)
-            //readStream(stream: stream, amount: 4)
-            
-            if buffer.isEmpty {
-                break
-            }
-            infoSize = Array(buffer[0..<4]).tohexNumbers.toDecimalValue
-            buffer.flush()
-            
-            
-        }
-        print("big parsing..")
-        children?.forEach {
-            $0.parse()
-        }
-    }
-}
-
-class SmallBox: Container {
-
-    var type: ContainerType
-    var size: Int
-    var data: Data = Data()
-    
-    init(type: ContainerType, size: Int) {
-        self.type = type
-        self.size = size
-    }
-    
-    func parse() {
-    }
-}
-
 enum ContainerType: String, CaseIterable {
     case root
     case ftyp
@@ -143,6 +33,10 @@ enum ContainerType: String, CaseIterable {
     case co64
     case ctts
     case stsd
+    case avc1
+    case avcc
+    case mp4a
+    case esds
     case stts
     case stss
     case stsc
@@ -155,18 +49,8 @@ enum ContainerType: String, CaseIterable {
 extension ContainerType {
     var isParent: Bool {
         if self == .moov || self == .trak || self == .mdia || self == .minf
-            || self == .dinf || self == .stbl || self == .edts {
-            return true
-        } else {
-            return false
-        }
-    }
-    
-    var isHeader: Bool {
-        if self == .ftyp || self == .free || self == .mvhd || self == .tkhd
-            || self == .mdhd || self == .stbl || self == .hdlr || self == .vmhd
-            || self == .smhd {
-            
+            || self == .dinf || self == .stbl || self == .edts || self == .esds
+        || self == .mp4a || self == .avc1 {
             return true
         } else {
             return false
@@ -175,9 +59,8 @@ extension ContainerType {
 }
 
 class RootType: HalfContainer {
+    
     var offset: UInt64 = 0
-    
-    
     var type: ContainerType = .root
     var size: Int = 0
     var data: Data = Data()
@@ -191,6 +74,7 @@ class RootType: HalfContainer {
     var children: [Container] = []
 
     func parse() {
+        print("\(type) is parsing..")
         children.forEach {
             switch $0.type {
             case .ftyp:
@@ -202,10 +86,6 @@ class RootType: HalfContainer {
             case .moov:
                 $0.parse()
                 self.moov = $0 as! Moov
-            case .udta:
-                let child = $0 as! Udta
-                child.parse()
-                self.udta = child
             case .mdat:
                 $0.parse()
                 self.mdat = $0 as! Mdat
@@ -228,6 +108,7 @@ class Ftyp: Container {
     var compatibleBrand: [String] = []
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [4,4,4,4])
         majorBrand = dataArray[0].convertToString
         minorVersion = dataArray[1].convertToString
@@ -250,6 +131,7 @@ class Free: Container {
     var data: Data = Data()
     
     func parse() {
+        print("\(type) is parsing..")
         //TODO: freetype parse
     }
     
@@ -263,7 +145,7 @@ class Mdat: Container {
     var size: Int = 0
     var data: Data = Data()
     func parse() {
-        
+        print("\(type) is parsing..")
     }
     /*init(data: Data) {
         self.data = data
@@ -282,6 +164,7 @@ class Moov: HalfContainer {
     var children: [Container] = []
     
     func parse() {
+        print("\(type) is parsing..")
         children.forEach {
             switch $0.type {
             case .mvhd:
@@ -324,6 +207,7 @@ class Mvhd: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4,4,4,4,4,2])
        
        // print(data.count)
@@ -340,8 +224,6 @@ class Mvhd: Container {
         //self.volume = dataArray[8]
 //        self.others = dataArray
     
-        
-        print(type)
     }
     /*init(version: Int,
          flag: Int,
@@ -375,7 +257,7 @@ class Iods: Container {
     init() {}
     
     func parse() {
-        print(type)
+        print("\(type) is parsing..")
     }
     /*init(data: Data) {
         self.data = data
@@ -401,6 +283,7 @@ class Trak: HalfContainer {
     init() {}
     
     func parse() {
+       print("\(type) is parsing..")
         children.forEach {
             switch $0.type {
             case .tkhd:
@@ -449,7 +332,7 @@ class Tkhd: Container {
     init() {}
     
     func parse() {
-        
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4,4,4,4,4,8,2,2,2,2,36,4,4])
         self.creationDate = Date(timeIntervalSince1970: TimeInterval(dataArray[2].convertToInt))
         //self.modificationTime = dataArray[3].convertToInt
@@ -513,6 +396,7 @@ class Edts: HalfContainer {
     
     var children: [Container] = []
     func parse() {
+        print("\(type) is parsing..")
         children.forEach {
             if $0.type == .elst {
                 $0.parse()
@@ -542,6 +426,7 @@ class Elst: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4,4])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
@@ -577,6 +462,7 @@ class Mdia: HalfContainer {
     
     
     func parse() {
+        print("\(type) is parsing..")
         children.forEach {
             switch $0.type {
             case .mdhd:
@@ -616,6 +502,7 @@ class Mdhd: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4,4,4,4,2])
         self.version = dataArray[0].convertToInt
         self.flag = dataArray[1].convertToInt
@@ -659,6 +546,7 @@ class Hdlr: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4,4])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
@@ -700,6 +588,7 @@ class Minf: HalfContainer {
     
     
     func parse() {
+        print("\(type) is parsing..")
         children.forEach {
             switch $0.type {
             case .vmhd:
@@ -744,6 +633,7 @@ class Vmhd: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,2,2])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
@@ -773,6 +663,7 @@ class Smhd: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,2])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
@@ -801,6 +692,7 @@ class Dinf: HalfContainer {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         children.forEach {
             if $0.type == .dref {
                 $0.parse()
@@ -828,6 +720,7 @@ class Dref: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,2])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
@@ -864,6 +757,7 @@ class Stbl: HalfContainer {
     
     
     func parse() {
+        print("\(type) is parsing..")
         children.forEach {
             switch $0.type {
             case .stsd:
@@ -913,7 +807,7 @@ class Co64: Container {
     init() {}
     
     func parse() {
-        print(type)
+        print("\(type) is parsing..")
     }
 }
 
@@ -932,18 +826,18 @@ class Ctts: Container {
     init() {}
     
     func parse(){
-        print("data..\(data.count)")
+       print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
         self.entryCount = dataArray[2].convertToInt
-        print(entryCount)
+
         for i in 0..<entryCount {
             let sampleCount = data.subdata(in: (8 + 8 * i)..<(12 + 8 * i)).convertToInt
             let sampleOffset = data.subdata(in: (12 + 8 * i)..<(16 + 8 * i)).convertToInt
             self.sampleCounts.append(sampleCount)
             self.sampleOffsets.append(sampleOffset)
-            print(sampleOffset)
+
         }
     }
     
@@ -961,21 +855,39 @@ class Ctts: Container {
     }*/
 }
 
-class Stsd: Container {
+class Stsd: HalfContainer {
     
+    var offset: UInt64 = 0
     var type: ContainerType = .stsd
-    
     var size: Int = 0
     var data: Data = Data()
     
     var version: Int = 0
     var flags: Int = 0
     var entryCount: Int = 0
-    var other: Int = 0
+    var avc1 = Avc1()
+    var mp4a = Mp4a()
+    
+    var children: [Container] = []
     
     init() {}
     
     func parse() {
+        children.forEach {
+            switch $0.type {
+            case .mp4a:
+                $0.parse()
+                mp4a = $0 as! Mp4a
+            case .avc1:
+                $0.parse()
+                avc1 = $0 as! Avc1
+            default:
+                assertionFailure("no type")
+            }
+           
+            
+        }
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
@@ -994,6 +906,133 @@ class Stsd: Container {
     }*/
 }
 
+class Avc1: HalfContainer {
+    var type: ContainerType = .avc1
+    var size: Int = 0
+    var data: Data = Data()
+    var offset: UInt64 = 0
+    var children: [Container] = []
+    
+    var referenceIndex = 0
+    var width = 0
+    var height = 0
+    var compressor = ""
+    
+    var avcc = Avcc()
+
+    func parse() {
+        print("\(type) is parsing..")
+        children.forEach {
+            $0.parse()
+            self.avcc = $0 as! Avcc
+        }
+    }
+    
+    
+}
+
+class Avcc: Container {
+    
+    var type: ContainerType = .avcc
+    var size: Int = 0
+    var data: Data = Data()
+    
+    var version = 0
+    var profile = ""
+    var compat = 0
+    var level = 0
+    var naluLength = 0
+    var segmentParams: [Data] = []
+    var pictureParams: [Data] = []
+    
+    
+    func parse() {
+        print("\(type) is parsing..")
+    }
+}
+/*
+[mp4a] size=8+82
+data_reference_index = 1
+channel_count = 2
+sample_size = 16
+sample_rate = 44100
+
+[esds] size=12+42
+[ESDescriptor] size=5+37
+es_id = 2
+stream_priority = 0
+[DecoderConfig] size=5+23
+stream_type = 5
+object_type = 64
+up_stream = 0
+buffer_size = 0
+max_bitrate = 128000
+avg_bitrate = 2099
+DecoderSpecificInfo = 12 10 56 e5 00
+[Descriptor:06] size=5+1
+
+*/
+class Esds: HalfContainer {
+    var type: ContainerType = .avc1
+    var size: Int = 0
+    var data: Data = Data()
+    var offset: UInt64 = 0
+    var children: [Container] = []
+    
+    var esDescriptor = EsDescriptor()
+    
+    func parse() {
+        print("\(type) is parsing..")
+        children.forEach {
+            $0.parse()
+            self.esDescriptor = $0 as! EsDescriptor
+        }
+    }
+}
+
+//TODO: 구현예정
+class EsDescriptor: Container {
+    var type: ContainerType = .stts
+    var size: Int = 0
+    var data: Data = Data()
+    
+    var version: Int = 0
+    var flags: Int = 0
+    var entryCount: Int = 0
+    var sampleCounts: [Int] = []
+    var sampleDeltas: [Int] = []
+    
+    init() {}
+    
+    func parse() {
+        print("\(type) is parsing..")
+    }
+}
+
+class Mp4a: HalfContainer {
+    var type: ContainerType = .avc1
+    var size: Int = 0
+    var data: Data = Data()
+    var offset: UInt64 = 0
+    var children: [Container] = []
+    
+    var dataReferenceIndex = 0
+    var channelCount = 0
+    var sampleSize = 0
+    var sampleRate = 0
+    
+    var esds = Esds()
+    
+    func parse() {
+        print("\(type) is parsing..")
+        children.forEach {
+            $0.parse()
+            self.esds = $0 as! Esds
+        }
+    }
+    
+    
+}
 class Stts: Container {
     
     var type: ContainerType = .stts
@@ -1009,6 +1048,7 @@ class Stts: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
@@ -1049,6 +1089,7 @@ class Stss: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
@@ -1087,6 +1128,7 @@ class Stsc: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
@@ -1125,22 +1167,24 @@ class Stsz: Container {
     
     var version: Int = 0
     var flags: Int = 0
-    var entrySize: [Int] = []
+    var entrySizes: [Int] = []
     var samplesSize: Int = 0
     var sampleCount: Int = 0
     
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4,4])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
         self.samplesSize = dataArray[2].convertToInt
         self.sampleCount = dataArray[3].convertToInt
-        for i in 0..<sampleCount {
-            if samplesSize == 0 {
-                let entry = data.subdata(in: (12 + 4 * i)..<(16 + 4 * i)).convertToInt
-                self.entrySize.append(entry)
+        if samplesSize == 0 {
+            for i in 0..<sampleCount {
+                
+                    let entry = data.subdata(in: (12 + 4 * i)..<(16 + 4 * i)).convertToInt
+                    self.entrySizes.append(entry)
             }
         }
     }
@@ -1172,6 +1216,7 @@ class Stco: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         let dataArray = data.slice(in: [1,3,4])
         self.version = dataArray[0].convertToInt
         self.flags = dataArray[1].convertToInt
@@ -1208,6 +1253,7 @@ class Udta: Container {
     init() {}
     
     func parse() {
+        print("\(type) is parsing..")
         /*children.forEach {
             if $0.type == .meta {
                     $0.parse()
@@ -1240,7 +1286,7 @@ class Meta: Container {
     init() {}
     
     func parse() {
-        print(type)
+        print("\(type) is parsing..")
         /*children.forEach {
             if $0.type == .hdlr {
                 $0.parse()
@@ -1259,6 +1305,7 @@ class Chunk {
     var sampleDescriptionIndex: Int = 0
     var firstSample: Int = 0
     var sampleCount: Int = 0
+    var startSample: Int = 0
     var offset: Int = 0
     
     init() {}

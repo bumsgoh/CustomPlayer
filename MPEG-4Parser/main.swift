@@ -37,18 +37,13 @@ let documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDoma
 let dataPath = documentsDirectory.appendingPathComponent("firewerk.mp4")
 
 
-let stream = InputStream(url: dataPath)
-stream?.open()
-print(stream?.hasBytesAvailable)
 
-let asset = AVAsset(url: dataPath)
 let reader = FileReader(url: dataPath)
 let mediaReader = MediaFileReader(fileReader: reader!, type: .mp4)
-let root: RootType = RootType()
-root.size = 1000000000
-mediaReader.decodeFile(type: .mp4, root: root)
+mediaReader.decodeFile(type: .mp4)
 
-print(root.moov.mvhd.nextTrackId)
-print("is..\(root.moov.traks[1].mdia.minf.stbl.stco.chunkOffsets.count)")//traks[1].mdia.minf.stbl.stsz.entrySize.count)
+//mediaReader.makeTracks()
+
+//mediaReader.chunkToStream()
 
 

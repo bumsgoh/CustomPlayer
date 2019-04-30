@@ -43,7 +43,6 @@ class FileReader: FileStreamReadable {
     }
     
     func read(length: Int, completion: @escaping (Data)->()) {
-        //print(fileHandler.readDataToEndOfFile())
         readQueue.sync {[weak self] in
             guard let self = self else { return }
             let data = self.fileHandler.readData(ofLength: length)

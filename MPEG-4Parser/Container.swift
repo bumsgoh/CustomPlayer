@@ -23,10 +23,9 @@ protocol HalfContainer: Container {
     var offset: UInt64 { get set }
     var children: [Container] { get set }
     
-  //  func connect()
-    
-    
 }
+
+
 
 
 
